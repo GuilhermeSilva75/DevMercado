@@ -17,7 +17,7 @@ export default function Header({ title }: HeaderProps) {
   return (
     <Container>
       <Menu onPress={() => navigation.openDrawer()}>
-        <Feather name="menu" size={35} color="black" />
+        <Feather name="menu" size={35} color="#FFF" />
       </Menu>
       {title && (
         <Title>

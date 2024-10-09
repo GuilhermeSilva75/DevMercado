@@ -13,6 +13,7 @@ max-height: 60px;
 export const Title = styled.Text`
 font-size: 20px;
 padding-left: 6px;
+color: #FFF;
 `
 export const Menu = styled.TouchableOpacity`
 justify-self: center;

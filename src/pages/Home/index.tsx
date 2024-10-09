@@ -1,8 +1,8 @@
-import { View, Text, Button } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import React, { useContext, useEffect, useState } from 'react';
 import { format } from 'date-fns'
 
-import { Background, ListBalance } from './styles';
+import { Background, ListBalance, Area, List, Title } from './styles';
 import Header from '../../Componentes/Header';
 
 import api from '../../service/api';
@@ -10,11 +10,20 @@ import api from '../../service/api';
 import BalanceItem from '../../Componentes/BalanceItem';
 
 import { useIsFocused } from '@react-navigation/native'
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import HistoricoList from '../../Componentes/HistoricoList';
+
+
+interface BalanceProps {
+  saldo: string | number
+  tag: string
+}
 
 export default function Home() {
 
-  const [listBalance, setListBalance] = useState([])
+  const [listBalance, setListBalance] = useState<BalanceProps[]>([])
   const [dateMovements, setDateMovements] = useState(new Date())
+  const [movements, setMovements] = useState([])
 
   const isFocused = useIsFocused()
 
@@ -24,6 +33,12 @@ export default function Home() {
     async function getMovements() {
       let dateformated = format(dateMovements, 'dd/MM/yyyy')
 
+      const receives = await api.get('/receives', {
+        params: {
+          date: dateformated
+        }
+      })
+
       const balance = await api.get('/dashboard', {
         params: {
           date: dateformated
@@ -32,6 +47,7 @@ export default function Home() {
 
       if (isActive) {
         setListBalance(balance.data)
+        setMovements(receives.data)
       }
 
       return () => isActive = false
@@ -40,7 +56,21 @@ export default function Home() {
     }
 
     getMovements()
-  }, [isFocused])
+  }, [isFocused, dateMovements])
+
+  async function handleDelete(id: string) {
+    try {
+      await api.delete('delete', {
+        params: {
+          item_id: id
+        }
+      })
+      setDateMovements(new Date())
+    } catch (err) {
+      console.log(err);
+
+    }
+  }
 
   return (
     <Background>
@@ -51,8 +81,21 @@ export default function Home() {
         data={listBalance}
         horizontal={true}
         showsHorizontalScrollIndicator={false}
-        keyExtractor={item => item.tag}
-        renderItem={({ item }) => (<BalanceItem data={item}/>)}
+        renderItem={({ item }) => (<BalanceItem data={item} />)}
+      />
+
+      <Area>
+        <TouchableOpacity>
+          <MaterialIcons name="event" size={24} color="black" />
+        </TouchableOpacity>
+        <Title>Ultimas Movimentações</Title>
+      </Area>
+
+      <List
+        data={movements}
+        renderItem={({ item }) => <HistoricoList data={item} deleteItem={handleDelete} />}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 20 }}
       />
     </Background>
   );
