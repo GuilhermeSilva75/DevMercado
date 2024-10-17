@@ -1,6 +1,7 @@
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, Text, Modal } from 'react-native';
 import React, { useContext, useEffect, useState } from 'react';
 import { format } from 'date-fns'
+  ;
 
 import { Background, ListBalance, Area, List, Title } from './styles';
 import Header from '../../Componentes/Header';
@@ -12,6 +13,7 @@ import BalanceItem from '../../Componentes/BalanceItem';
 import { useIsFocused } from '@react-navigation/native'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import HistoricoList from '../../Componentes/HistoricoList';
+import Calendar from '../../Componentes/Calendar';
 
 
 interface BalanceProps {
@@ -24,6 +26,7 @@ export default function Home() {
   const [listBalance, setListBalance] = useState<BalanceProps[]>([])
   const [dateMovements, setDateMovements] = useState(new Date())
   const [movements, setMovements] = useState([])
+  const [modalVisible, setModalVisible] = useState(false)
 
   const isFocused = useIsFocused()
 
@@ -31,7 +34,10 @@ export default function Home() {
     let isActive = true
 
     async function getMovements() {
-      let dateformated = format(dateMovements, 'dd/MM/yyyy')
+
+      let date = new Date(dateMovements)
+      let onlyDate = date.valueOf() + date.getTimezoneOffset() * 60 * 1000;
+      let dateformated = format(onlyDate, 'dd/MM/yyyy')
 
       const receives = await api.get('/receives', {
         params: {
@@ -51,8 +57,6 @@ export default function Home() {
       }
 
       return () => isActive = false
-
-
     }
 
     getMovements()
@@ -72,6 +76,12 @@ export default function Home() {
     }
   }
 
+  function filterDateMovementes(dateSelected: any) {
+    // console.log(dateSlected);
+    setDateMovements(dateSelected)
+
+  }
+
   return (
     <Background>
       <Header title="Movimentações" />
@@ -85,7 +95,7 @@ export default function Home() {
       />
 
       <Area>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => setModalVisible(true)}>
           <MaterialIcons name="event" size={24} color="black" />
         </TouchableOpacity>
         <Title>Ultimas Movimentações</Title>
@@ -96,7 +106,19 @@ export default function Home() {
         renderItem={({ item }) => <HistoricoList data={item} deleteItem={handleDelete} />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 20 }}
+        ListEmptyComponent={
+          <Text
+            style={{ color: 'gray', paddingHorizontal: 15 }}
+          >Nenhuma compra no momento...</Text>
+        }
       />
+
+
+      <Modal visible={modalVisible} animationType='fade' transparent={true}>
+        <Calendar setVisible={() => setModalVisible(false)}
+          handleFilter={filterDateMovementes}
+        />
+      </Modal>
     </Background>
   );
 }
